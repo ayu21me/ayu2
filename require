@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract SimpleBank {
+    // Mapping to hold balances of each user
+    mapping(address => uint) private balances;
+    address public owner;
+
+    // Constructor to set the contract owner
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // Function to deposit funds into the user's account
+    function deposit() public payable {
+        require(msg.value > 0, "Deposit amount must be greater than zero");
+        balances[msg.sender] += msg.value;
+    }
+
+    // Function to withdraw funds from the user's account
+    function withdraw(uint amount) public {
+        require(amount <= balances[msg.sender], "Insufficient balance");
+        balances[msg.sender] -= amount;
+        payable(msg.sender).transfer(amount);
+    }
+
+    // Function to close the user's account and return the remaining balance
+    function closeAccount() public {
+        uint balance = balances[msg.sender];
+        assert(balance >= 0); // Invariant check
+        delete balances[msg.sender];
+        if (balance > 0) {
+            payable(msg.sender).transfer(balance);
+        }
+    }
+
+    // Function to change the contract owner (only the current owner can do this)
+    function setOwner(address newOwner) public {
+        if (msg.sender != owner) {
+            revert("Only the owner can set a new owner");
+        }
+        owner = newOwner;
+    }
+
+    // Function to check the balance of the user's account
+    function getBalance() public view returns (uint) {
+        return balances[msg.sender];
+    }
+}
